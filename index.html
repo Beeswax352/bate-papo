@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bate-papo · практика португальского</title>
+<style>
+/* ===================== ТЕМЫ (цветовые переменные) ===================== */
+:root {
+  --bg: #eef1f5;
+  --panel: #ffffff;
+  --text: #1b1f24;
+  --muted: #6b7480;
+  --border: #e2e6ec;
+  --me: #2f80ed;
+  --me-text: #ffffff;
+  --ai: #ffffff;
+  --accent: #18a058;
+  --accent-2: #12804a;
+  --danger: #e5484d;
+  --warn-bg: #fff8e6;
+  --warn-border: #f2c94c;
+  --ok-bg: #eafaf1;
+  --ok-border: #6fcf97;
+  --chip: #ffffff;
+  --shadow: 0 1px 2px rgba(0,0,0,.06), 0 2px 8px rgba(0,0,0,.04);
+}
+[data-theme="dark"] {
+  --bg: #0f1318;
+  --panel: #171c22;
+  --text: #e7ebf0;
+  --muted: #8a94a0;
+  --border: #2a323c;
+  --me: #2b6fd6;
+  --me-text: #ffffff;
+  --ai: #1f262e;
+  --accent: #22b268;
+  --accent-2: #1b9457;
+  --warn-bg: #2a2414;
+  --warn-border: #8a6d1f;
+  --ok-bg: #142a1e;
+  --ok-border: #2e7d4f;
+  --chip: #1f262e;
+  --shadow: 0 1px 2px rgba(0,0,0,.4);
+}
+
+/* ===================== БАЗА ===================== */
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button { font: inherit; color: inherit; cursor: pointer; }
+.app {
+  max-width: 760px; height: 100dvh; margin: 0 auto;
+  display: flex; flex-direction: column;
+  background: var(--bg);
+}
+
+/* ===================== ШАПКА ===================== */
+.top {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 14px; background: var(--panel); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.logo { font-size: 26px; }
+.title { font-weight: 650; }
+.subtitle { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.actions { display: flex; gap: 4px; }
+.icon-btn {
+  width: 38px; height: 38px; border-radius: 10px; border: none; background: transparent;
+  font-size: 18px; display: grid; place-items: center;
+}
+.icon-btn:hover { background: var(--bg); }
+.icon-btn.off { opacity: .45; }
+
+/* ===================== ПЕРЕКЛЮЧАТЕЛЬ РЕЖИМОВ ===================== */
+.modes {
+  display: flex; gap: 4px; margin: 10px 12px 0; padding: 4px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+}
+.modes button {
+  flex: 1; border: none; background: transparent; padding: 8px 6px; border-radius: 9px;
+  font-size: 13.5px; color: var(--muted); white-space: nowrap;
+}
+.modes button.active { background: var(--accent); color: #fff; font-weight: 600; }
+
+/* ===================== БЫСТРЫЕ ТЕМЫ ===================== */
+.topics {
+  display: flex; gap: 6px; padding: 10px 12px 4px; overflow-x: auto; scrollbar-width: none;
+}
+.topics::-webkit-scrollbar { display: none; }
+.chip {
+  flex: none; border: 1px solid var(--border); background: var(--chip);
+  padding: 6px 12px; border-radius: 999px; font-size: 13.5px; box-shadow: var(--shadow);
+}
+.chip:hover { border-color: var(--accent); }
+
+/* ===================== ЛЕНТА ЧАТА ===================== */
+.chat { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+.msg { display: flex; flex-direction: column; max-width: 84%; }
+.msg.me { align-self: flex-end; align-items: flex-end; }
+.msg.ai { align-self: flex-start; align-items: flex-start; }
+.bubble {
+  padding: 9px 13px; border-radius: 16px; box-shadow: var(--shadow); word-wrap: break-word;
+}
+.msg.me .bubble { background: var(--me); color: var(--me-text); border-bottom-right-radius: 5px; }
+.msg.ai .bubble { background: var(--ai); border-bottom-left-radius: 5px; border: 1px solid var(--border); }
+.translation {
+  margin-top: 6px; padding-top: 6px; border-top: 1px dashed currentColor;
+  font-size: 13.5px; opacity: .85; font-style: italic;
+}
+.tools { display: flex; gap: 4px; margin-top: 3px; }
+.tool {
+  border: none; background: transparent; color: var(--muted);
+  font-size: 12px; padding: 2px 6px; border-radius: 6px;
+}
+.tool:hover { background: var(--panel); color: var(--text); }
+
+/* Плашка «голосовое сообщение» — видна только в режиме «Только голос» */
+.placeholder {
+  display: none; align-items: center; gap: 6px;
+  padding: 10px 14px; border-radius: 16px; border: 1px solid var(--border);
+  background: var(--panel); color: var(--muted); font-size: 13.5px;
+}
+.msg.me .placeholder { background: var(--me); color: var(--me-text); border: none; }
+body.mode-voice .msg:not(.revealed) .content { display: none; }
+body.mode-voice .msg:not(.revealed) .placeholder { display: flex; }
+
+/* Карточка исправления */
+.correction {
+  margin-top: 6px; padding: 9px 12px; border-radius: 12px; font-size: 14px;
+  border: 1px solid; max-width: 100%;
+}
+.correction.warn { background: var(--warn-bg); border-color: var(--warn-border); }
+.correction.ok { background: var(--ok-bg); border-color: var(--ok-border); }
+.c-title { font-weight: 650; margin-bottom: 3px; }
+.c-right { font-weight: 600; margin: 2px 0; }
+.c-ex { color: var(--muted); }
+.c-listen { margin-top: 4px; }
+
+/* Индикатор «печатает…» */
+.typing .bubble { display: flex; gap: 4px; padding: 13px 15px; }
+.typing span {
+  width: 7px; height: 7px; border-radius: 50%; background: var(--muted);
+  animation: blink 1.2s infinite ease-in-out;
+}
+.typing span:nth-child(2) { animation-delay: .2s; }
+.typing span:nth-child(3) { animation-delay: .4s; }
+@keyframes blink { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+
+/* ===================== ПАНЕЛЬ ВВОДА ===================== */
+.composer {
+  background: var(--panel); border-top: 1px solid var(--border);
+  padding: 10px 12px calc(10px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 8px;
+}
+.live {
+  min-height: 0; font-size: 14px; color: var(--muted); text-align: center; font-style: italic;
+}
+.live:empty { display: none; }
+.mic-row { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.mic {
+  width: 76px; height: 76px; border-radius: 50%; border: none;
+  background: var(--accent); color: #fff; font-size: 32px;
+  box-shadow: 0 4px 14px rgba(24,160,88,.35);
+  touch-action: none; user-select: none; -webkit-user-select: none;
+  transition: transform .1s, background .2s;
+}
+.mic:active { transform: scale(.96); }
+.mic.rec { background: var(--danger); animation: pulse 1.3s infinite; }
+.mic:disabled { opacity: .5; }
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(229,72,77,.5); }
+  70% { box-shadow: 0 0 0 18px rgba(229,72,77,0); }
+  100% { box-shadow: 0 0 0 0 rgba(229,72,77,0); }
+}
+.mic-hint { font-size: 12.5px; color: var(--muted); }
+.text-row { display: flex; gap: 8px; margin: 0; }
+.text-row input {
+  flex: 1; padding: 11px 14px; border-radius: 22px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font: inherit; outline: none;
+}
+.text-row input:focus { border-color: var(--accent); }
+.send {
+  width: 44px; height: 44px; border-radius: 50%; border: none;
+  background: var(--me); color: #fff; font-size: 17px;
+}
+.send:disabled { opacity: .5; }
+
+/* Видимость элементов по режимам */
+body.mode-text .mic-row { display: none; }
+body.mode-voice .text-row { display: none; }
+body.mode-voice-text .mic { width: 64px; height: 64px; font-size: 27px; }
+
+/* ===================== ВЫДВИЖНЫЕ ПАНЕЛИ ===================== */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none;
+  transition: opacity .2s; z-index: 10;
+}
+.overlay.show { opacity: 1; pointer-events: auto; }
+.sheet {
+  position: fixed; left: 50%; bottom: 0; transform: translate(-50%, 105%);
+  width: min(560px, 100%); max-height: 85dvh; overflow-y: auto;
+  background: var(--panel); border-radius: 18px 18px 0 0; padding: 18px 18px 26px;
+  transition: transform .25s ease; z-index: 11; box-shadow: 0 -6px 30px rgba(0,0,0,.2);
+}
+.sheet.show { transform: translate(-50%, 0); }
+.sheet h2 { margin: 0 0 12px; font-size: 18px; display: flex; justify-content: space-between; align-items: center; }
+.sheet label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+.sheet input[type="text"], .sheet input[type="password"] {
+  width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); font: inherit;
+}
+.sheet input[type="range"] { width: 100%; }
+.note { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.btn {
+  border: none; border-radius: 10px; padding: 10px 14px; font-weight: 600;
+  background: var(--accent); color: #fff; margin-top: 14px;
+}
+.btn.ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+.btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stat { background: var(--bg); border-radius: 12px; padding: 10px; text-align: center; }
+.stat b { display: block; font-size: 22px; }
+.stat small { color: var(--muted); }
+.err-list { list-style: none; padding: 0; margin: 6px 0 0; }
+.err-list li {
+  padding: 8px 10px; border-radius: 10px; background: var(--bg); margin-bottom: 6px; font-size: 14px;
+}
+.err-list .cnt { float: right; color: var(--muted); font-size: 12.5px; }
+.err-list .rule { color: var(--muted); font-size: 12.5px; }
+.err-list s { color: var(--danger); }
+
+/* Всплывающее уведомление */
+.toast {
+  position: fixed; left: 50%; bottom: 150px; transform: translateX(-50%);
+  background: #222; color: #fff; padding: 9px 14px; border-radius: 10px; font-size: 13.5px;
+  max-width: 90%; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 20;
+}
+.toast.show { opacity: .95; }
+</style>
+</head>
+<body class="mode-voice-text">
+<div class="app">
+  <!-- Шапка -->
+  <header class="top">
+    <div class="brand">
+      <span class="logo">🇧🇷</span>
+      <div style="min-width:0">
+        <div class="title">Bate-papo com a Bia</div>
+        <div class="subtitle" id="statusLine">демо-режим</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="icon-btn" id="ttsBtn" title="Озвучка ответов вкл/выкл">🔊</button>
+      <button class="icon-btn" id="progressBtn" title="Мой прогресс">📊</button>
+      <button class="icon-btn" id="themeBtn" title="Светлая / тёмная тема">🌓</button>
+      <button class="icon-btn" id="settingsBtn" title="Настройки и API-ключ">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Переключатель режимов -->
+  <nav class="modes" id="modes">
+    <button data-mode="voice-text">🎤 Голос + текст</button>
+    <button data-mode="voice">🎧 Только голос</button>
+    <button data-mode="text">⌨️ Только текст</button>
+  </nav>
+
+  <!-- Быстрые темы -->
+  <div class="topics" id="topics"></div>
+
+  <!-- Лента сообщений -->
+  <main class="chat" id="chat"></main>
+
+  <!-- Ввод -->
+  <footer class="composer">
+    <div class="live" id="live"></div>
+    <div class="mic-row">
+      <button class="mic" id="micBtn" aria-label="Микрофон">🎤</button>
+      <div class="mic-hint" id="micHint">Удерживайте и говорите по-португальски (или нажмите один раз)</div>
+    </div>
+    <form class="text-row" id="textRow">
+      <input id="textInput" placeholder="Escreva em português…" autocomplete="off">
+      <button type="submit" class="send" id="sendBtn" aria-label="Отправить">➤</button>
+    </form>
+  </footer>
+</div>
+
+<!-- Затемнение под панелями -->
+<div class="overlay" id="overlay"></div>
+
+<!-- Панель настроек -->
+<aside class="sheet" id="settingsSheet">
+  <h2>⚙️ Настройки <button class="icon-btn" data-close>✕</button></h2>
+
+  <label for="keyInput">API-ключ Claude (sk-ant-…)</label>
+  <input type="password" id="keyInput" placeholder="Вставьте ключ сюда — без него работает демо-режим">
+  <div class="note">
+    Ключ хранится только в localStorage этого браузера и отправляется напрямую в api.anthropic.com.
+    Получить ключ: console.anthropic.com → API Keys. Альтернатива — константа <code>DEFAULT_API_KEY</code> в начале скрипта.
+  </div>
+
+  <label for="modelInput">Модель</label>
+  <input type="text" id="modelInput" placeholder="claude-sonnet-5-5">
+  <div class="note">Для быстрых и дешёвых ответов можно поставить <code>claude-haiku-5-5</code>.</div>
+
+  <label for="rateInput">Скорость озвучки: <span id="rateVal">0.95</span></label>
+  <input type="range" id="rateInput" min="0.6" max="1.3" step="0.05">
+
+  <div class="btn-row">
+    <button class="btn" id="saveSettings">Сохранить</button>
+    <button class="btn ghost" id="testVoice">🔊 Проверить голос</button>
+    <button class="btn ghost" id="clearChat">🗑 Очистить чат</button>
+  </div>
+  <div class="note" id="voiceInfo"></div>
+</aside>
+
+<!-- Панель прогресса -->
+<aside class="sheet" id="progressSheet">
+  <h2>📊 Мой прогресс <button class="icon-btn" data-close>✕</button></h2>
+  <div class="stats">
+    <div class="stat"><b id="stStreak">0</b><small>🔥 дней подряд</small></div>
+    <div class="stat"><b id="stLevel">—</b><small>примерный уровень</small></div>
+    <div class="stat"><b id="stTotal">0</b><small>моих фраз</small></div>
+  </div>
+  <label>Повторяющиеся ошибки</label>
+  <ul class="err-list" id="errList"></ul>
+  <button class="btn ghost" id="resetProgress">Сбросить прогресс</button>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =====================================================================
+   НАСТРОЙКИ ПО УМОЛЧАНИЮ
+   ===================================================================== */
+// ← Сюда можно вписать ключ Claude API (например 'sk-ant-...'),
+//   но удобнее вставить его через ⚙️ в интерфейсе.
+const DEFAULT_API_KEY = '';
+const DEFAULT_MODEL = 'claude-sonnet-5-5';
+const IDLE_MS = 45000;          // через сколько мс тишины Bia предложит тему
+const MAX_IDLE_NUDGES = 2;      // не больше стольких подсказок подряд
+
+/* =====================================================================
+   ХРАНИЛИЩЕ (localStorage с защитой от ошибок)
+   ===================================================================== */
+const LS = {
+  get(k, d) {
+    try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }
+    catch (e) { return d; }
+  },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+
+const state = {
+  mode: LS.get('pt_mode', 'voice-text'),
+  tts: LS.get('pt_tts', true),
+  theme: LS.get('pt_theme', null),
+  apiKey: LS.get('pt_key', '') || DEFAULT_API_KEY,
+  model: LS.get('pt_model', DEFAULT_MODEL),
+  rate: LS.get('pt_rate', 0.95),
+  history: [],     // история для API: {role: 'user'|'assistant', content}
+  busy: false
+};
+
+// Прогресс: серия дней, ошибки, оценки уровня
+const progress = Object.assign(
+  { streak: 0, lastDay: null, errors: {}, levelScores: [], totalMsgs: 0 },
+  LS.get('pt_progress', {})
+);
+const saveProgress = () => LS.set('pt_progress', progress);
+
+const $ = id => document.getElementById(id);
+const chat = $('chat');
+const messages = [];
+let msgId = 0;
+
+/* =====================================================================
+   ТЕКСТЫ: темы, подсказки при молчании, демо-ответы
+   ===================================================================== */
+const TOPICS = [
+  { label: '👋 Познакомиться',
+    pt: 'Oi! Eu sou a Bia, do Rio de Janeiro. 😊 E você, como se chama? De onde você é?',
+    ru: 'Привет! Я Биа из Рио-де-Жанейро. А тебя как зовут? Откуда ты?' },
+  { label: '🍽 Заказать еду',
+    pt: 'Vamos brincar de restaurante? Eu sou a garçonete. Boa noite! O que você vai querer hoje?',
+    ru: 'Поиграем в ресторан? Я официантка. Добрый вечер! Что будете заказывать сегодня?' },
+  { label: '☀️ Погода',
+    pt: 'Aqui no Rio está muito calor hoje! ☀️ E aí, como está o tempo na sua cidade?',
+    ru: 'Здесь в Рио сегодня очень жарко! А как погода в твоём городе?' },
+  { label: '🎨 Хобби',
+    pt: 'O que você gosta de fazer no seu tempo livre? Eu adoro dançar forró e ir à praia.',
+    ru: 'Что ты любишь делать в свободное время? Я обожаю танцевать форро и ходить на пляж.' },
+  { label: '📅 Планы на выходные',
+    pt: 'E aí, quais são os seus planos para o fim de semana?',
+    ru: 'Ну что, какие у тебя планы на выходные?' }
+];
+
+const IDLE_NUDGES = [
+  { pt: 'Ei, tá aí? 😊 Que tal falar sobre comida? Qual é a sua comida favorita?',
+    ru: 'Эй, ты тут? Давай поговорим о еде? Какое твоё любимое блюдо?' },
+  { pt: 'Vamos mudar de assunto? Me conta: o que você fez ontem?',
+    ru: 'Сменим тему? Расскажи: что ты делала вчера?' },
+  { pt: 'Uma pergunta: você já foi ao Brasil? Para qual cidade você queria ir?',
+    ru: 'Вопрос: ты была в Бразилии? В какой город тебе хотелось бы поехать?' },
+  { pt: 'Que tal falar de música? Que tipo de música você curte?',
+    ru: 'Может, о музыке? Какую музыку ты любишь?' },
+  { pt: 'Me conta uma coisa: como é a sua cidade? O que tem de bonito lá?',
+    ru: 'Расскажи: какой у тебя город? Что там есть красивого?' }
+];
+
+const SILENT_REC = {
+  pt: 'Não ouvi nada… 🙂 Sem pressa! Se quiser, me fala: como foi o seu dia?',
+  ru: 'Я ничего не услышала… Не спеши! Если хочешь, расскажи: как прошёл твой день?'
+};
+
+const PRAISES = [
+  'Отлично, без ошибок! 👏', 'Супер — всё правильно! 🎉',
+  'Звучит как у настоящей кариоки! ✨', 'Ошибок нет, так держать! 💪', 'Чисто и естественно! 🌴'
+];
+
+// Демо-ответы по ключевым словам (работают без API-ключа)
+const DEMO_KEYWORDS = [
+  { re: /\b(oi|olá|ola|bom dia|boa tarde|boa noite|tudo bem|tudo bom)\b/i,
+    pt: 'Oi! Tudo ótimo por aqui 😊 E com você? O que você fez hoje?',
+    ru: 'Привет! У меня всё отлично. А у тебя? Что ты сегодня делала?' },
+  { re: /(me chamo|meu nome)/i,
+    pt: 'Que nome bonito! Prazer em te conhecer. Você mora em qual cidade?',
+    ru: 'Какое красивое имя! Приятно познакомиться. В каком городе ты живёшь?' },
+  { re: /(comida|comer|pizza|café|cafe|restaurante|quero|cardápio|beber|suco|água)/i,
+    pt: 'Ótima escolha! E para beber? Temos suco de maracujá, que é uma delícia!',
+    ru: 'Отличный выбор! А что будете пить? У нас есть сок маракуйи — очень вкусный!' },
+  { re: /(tempo|frio|calor|chuva|chove|sol|neve|quente)/i,
+    pt: 'Nossa! Aqui no Rio quase nunca faz frio. Você prefere o calor ou o frio?',
+    ru: 'Ничего себе! Здесь в Рио почти никогда не бывает холодно. Ты больше любишь жару или холод?' },
+  { re: /(fim de semana|sábado|sabado|domingo|planos|vou )/i,
+    pt: 'Parece um ótimo plano! Você vai sozinha ou com amigos?',
+    ru: 'Звучит как отличный план! Ты пойдёшь одна или с друзьями?' },
+  { re: /(gosto|adoro|amo|hobby|música|musica|ler|livro|esporte|dançar|dancar|cozinhar)/i,
+    pt: 'Que legal! Há quanto tempo você faz isso?',
+    ru: 'Как здорово! Как давно ты этим занимаешься?' }
+];
+const DEMO_GENERIC = [
+  { pt: 'Entendi! Me conta mais sobre isso.', ru: 'Поняла! Расскажи об этом побольше.' },
+  { pt: 'Sério? Que interessante! E por quê?', ru: 'Серьёзно? Как интересно! А почему?' },
+  { pt: 'Hmm, legal! E o que você acha disso?', ru: 'Хм, здорово! А что ты об этом думаешь?' },
+  { pt: 'Que bom! E depois, o que aconteceu?', ru: 'Как хорошо! А потом что было?' }
+];
+let demoGenericIdx = 0;
+
+// Правила демо-проверки частых ошибок: [шаблон, правильно, объяснение]
+const DEMO_RULES = [
+  ['eu é', 'eu sou', 'Глагол ser: eu sou, você é.'],
+  ['eu tem', 'eu tenho', 'Глагол ter: eu tenho, você tem.'],
+  ['eu gosta', 'eu gosto', 'Для «eu» окончание -o: eu gosto.'],
+  ['eu (?:está|esta)', 'eu estou', 'Глагол estar: eu estou, você está.'],
+  ['eu vai', 'eu vou', 'Глагол ir: eu vou, você vai.'],
+  ['eu quer', 'eu quero', 'Глагол querer: eu quero.'],
+  ['eu pode', 'eu posso', 'Глагол poder: eu posso.'],
+  ['eu faz', 'eu faço', 'Глагол fazer: eu faço.'],
+  ['eu sabe', 'eu sei', 'Глагол saber: eu sei.'],
+  ['a gente vamos', 'a gente vai', '«A gente» спрягается как он/она: a gente vai.'],
+  ['eu sou cansad[oa]', 'eu estou cansada', 'Временное состояние — через estar: estou cansada.'],
+  ['obrigado', 'obrigada', 'Женщина говорит «obrigada», мужчина — «obrigado».']
+];
+
+/* =====================================================================
+   ТЕМА И РЕЖИМЫ
+   ===================================================================== */
+function applyTheme() {
+  const t = state.theme ||
+    (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', t);
+}
+$('themeBtn').onclick = () => {
+  const cur = document.documentElement.getAttribute('data-theme');
+  state.theme = cur === 'dark' ? 'light' : 'dark';
+  LS.set('pt_theme', state.theme);
+  applyTheme();
+};
+
+function setMode(mode) {
+  state.mode = mode;
+  LS.set('pt_mode', mode);
+  document.body.classList.remove('mode-voice-text', 'mode-voice', 'mode-text');
+  document.body.classList.add('mode-' + mode);
+  document.querySelectorAll('#modes button').forEach(b =>
+    b.classList.toggle('active', b.dataset.mode === mode));
+  if (mode === 'text' && recActive) stopRec();
+  scrollDown();
+}
+document.querySelectorAll('#modes button').forEach(b => b.onclick = () => setMode(b.dataset.mode));
+
+/* =====================================================================
+   ОЗВУЧКА (SpeechSynthesis, pt-BR)
+   ===================================================================== */
+let ptVoice = null;
+function pickVoice() {
+  if (!('speechSynthesis' in window)) return;
+  const vs = speechSynthesis.getVoices();
+  // Сначала ищем «естественные»/онлайн-голоса pt-BR — они звучат лучше
+  ptVoice =
+    vs.find(v => /pt[-_]BR/i.test(v.lang) && /natural|online|google|neural/i.test(v.name)) ||
+    vs.find(v => /pt[-_]BR/i.test(v.lang)) ||
+    vs.find(v => /^pt/i.test(v.lang)) || null;
+  $('voiceInfo').textContent = ptVoice
+    ? 'Голос озвучки: ' + ptVoice.name + ' (' + ptVoice.lang + ')'
+    : 'Португальский голос в системе не найден — будет использован голос по умолчанию.';
+}
+if ('speechSynthesis' in window) {
+  speechSynthesis.onvoiceschanged = pickVoice;
+  pickVoice();
+}
+
+// Убираем эмодзи, чтобы синтезатор их не зачитывал
+const stripEmoji = s => s.replace(/[\p{Extended_Pictographic}\uFE0F\u200D]/gu, '').trim();
+
+function speak(text, force = false) {
+  if (!('speechSynthesis' in window)) { if (force) toast('Озвучка не поддерживается браузером'); return; }
+  if (!state.tts && !force) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(stripEmoji(text));
+  u.lang = 'pt-BR';
+  if (ptVoice) u.voice = ptVoice;
+  u.rate = state.rate;
+  speechSynthesis.speak(u);
+}
+function stopSpeaking() { if ('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+function updateTtsBtn() {
+  $('ttsBtn').textContent = state.tts ? '🔊' : '🔇';
+  $('ttsBtn').classList.toggle('off', !state.tts);
+}
+$('ttsBtn').onclick = () => {
+  state.tts = !state.tts;
+  LS.set('pt_tts', state.tts);
+  if (!state.tts) stopSpeaking();
+  updateTtsBtn();
+  toast(state.tts ? 'Озвучка включена' : 'Озвучка выключена');
+};
+
+/* =====================================================================
+   СООБЩЕНИЯ В ЧАТЕ
+   ===================================================================== */
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text !== undefined) e.textContent = text;
+  return e;
+}
+function scrollDown() { requestAnimationFrame(() => chat.scrollTop = chat.scrollHeight); }
+
+/**
+ * Добавить сообщение.
+ * role: 'user' | 'ai'; opts.ru — перевод; opts.history=false — не добавлять в историю для API
+ */
+function addMessage(role, text, opts = {}) {
+  const msg = { id: ++msgId, role, text, ru: opts.ru || null };
+  const wrap = el('div', 'msg ' + (role === 'user' ? 'me' : 'ai'));
+
+  // Плашка для режима «Только голос»
+  const ph = el('button', 'placeholder');
+  ph.innerHTML = role === 'user'
+    ? '🎙 Ваше сообщение · <u>показать текст</u>'
+    : '🎧 Голосовое сообщение · <u>показать текст</u>';
+  ph.onclick = () => { wrap.classList.add('revealed'); scrollDown(); };
+
+  const content = el('div', 'content');
+  const bubble = el('div', 'bubble');
+  const tr = el('div', 'translation');
+  tr.hidden = true;
+  bubble.append(el('div', 'text', text), tr);
+
+  const tools = el('div', 'tools');
+  const bTr = el('button', 'tool', '🌐 Перевести');
+  bTr.onclick = () => toggleTranslation(msg, tr);
+  const bSay = el('button', 'tool', '🔁 Озвучить');
+  bSay.onclick = () => speak(text, true);
+  tools.append(bTr, bSay);
+
+  content.append(bubble, tools);
+  wrap.append(ph, content);
+  chat.append(wrap);
+
+  Object.assign(msg, { el: wrap, content });
+  messages.push(msg);
+  if (opts.history !== false) {
+    state.history.push({ role: role === 'user' ? 'user' : 'assistant', content: text });
+  }
+  scrollDown();
+  return msg;
+}
+
+// Показ/скрытие перевода (порт → рус)
+async function toggleTranslation(msg, trEl) {
+  if (!trEl.hidden) { trEl.hidden = true; return; }
+  trEl.hidden = false;
+  if (msg.ru) { trEl.textContent = msg.ru; scrollDown(); return; }
+  if (!state.apiKey) {
+    trEl.textContent = 'Перевод ваших фраз доступен с API-ключом (⚙️).';
+    return;
+  }
+  trEl.textContent = 'Перевожу…';
+  try {
+    const out = await callClaude(
+      'Translate the Brazilian Portuguese text into natural Russian. Output only the translation, nothing else.',
+      [{ role: 'user', content: msg.text }], 300);
+    msg.ru = out.trim();
+    trEl.textContent = msg.ru;
+  } catch (e) {
+    trEl.textContent = 'Не удалось перевести: ' + e.message;
+  }
+  scrollDown();
+}
+
+// Карточка «💡 Исправление»
+function addCorrection(msg, c) {
+  if (!c) return;
+  const box = el('div', 'correction ' + (c.has_errors ? 'warn' : 'ok'));
+  box.append(el('div', 'c-title', '💡 Исправление'));
+  if (c.has_errors && c.corrected) {
+    box.append(el('div', 'c-right', '✅ ' + c.corrected));
+    if (c.explanation_ru) box.append(el('div', 'c-ex', c.explanation_ru));
+    const listen = el('button', 'tool c-listen', '🔊 Послушать правильный вариант');
+    listen.onclick = () => speak(c.corrected, true);
+    box.append(listen);
+  } else {
+    box.append(el('div', '', c.praise_ru || PRAISES[Math.floor(Math.random() * PRAISES.length)]));
+  }
+  msg.content.append(box);
+  scrollDown();
+}
+
+function showTyping() {
+  const t = el('div', 'msg ai typing');
+  const b = el('div', 'bubble');
+  b.append(el('span'), el('span'), el('span'));
+  t.append(b);
+  chat.append(t);
+  scrollDown();
+  return t;
+}
+
+/* =====================================================================
+   ОТПРАВКА ФРАЗЫ И ПОЛУЧЕНИЕ ОТВЕТА
+   ===================================================================== */
+function setBusy(b) {
+  state.busy = b;
+  $('sendBtn').disabled = b;
+  $('micBtn').disabled = b;
+}
+
+async function sendUser(text) {
+  text = (text || '').trim();
+  if (!text || state.busy) return;
+  clearIdle();
+  idleNudges = 0;
+  stopSpeaking();
+
+  const userMsg = addMessage('user', text);
+  markPractice();
+  setBusy(true);
+  const typing = showTyping();
+
+  let res;
+  try {
+    res = state.apiKey ? await askClaude() : await demoReply(text);
+  } catch (err) {
+    console.error(err);
+    toast('Ошибка API: ' + err.message + ' — ответ из демо-режима');
+    res = demoReplySync(text);
+  }
+  typing.remove();
+
+  if (res.user_ru) userMsg.ru = res.user_ru;
+  const aiMsg = addMessage('ai', res.reply, { ru: res.reply_ru });
+  addCorrection(aiMsg, res.correction);
+  registerErrors(res.errors);
+  registerLevel(res.level, text, res.errors);
+  speak(res.reply);
+
+  setBusy(false);
+  scheduleIdle();
+}
+
+/* =====================================================================
+   CLAUDE API
+   ===================================================================== */
+const SYSTEM_PROMPT = `You are "Bia", a warm, friendly young woman from Rio de Janeiro chatting casually with a friend.
+Your friend is a Russian native speaker (female — use feminine forms when addressing her) with a BASIC level of Brazilian Portuguese.
+She wants a relaxed, natural conversation — NOT a lesson. Never lecture inside your reply.
+
+Reply rules:
+- Simple, natural, everyday Brazilian Portuguese (level A2): short sentences, common words, a little casual flavor ("né", "legal", "nossa").
+- 1–3 short sentences. Usually end with a simple question to keep the chat going.
+- React to what she said like a real friend would. Use at most one emoji.
+- If she writes in Russian or mixes languages, answer in Portuguese and gently help her say it in Portuguese.
+
+Correction rules (go ONLY into the JSON fields, never into "reply"):
+- Her text often comes from speech recognition: IGNORE missing punctuation, capitalization, missing accents and obvious recognition artifacts.
+- Correct only real grammar/vocabulary mistakes and very unnatural phrasing. Remember she is female (e.g. "obrigada", "cansada").
+- explanation_ru: 1–2 short sentences in Russian, friendly.
+
+Return ONLY valid JSON, no markdown, exactly this shape:
+{
+  "reply": "your answer in Portuguese",
+  "reply_ru": "Russian translation of your answer",
+  "user_ru": "Russian translation of her last message",
+  "correction": {
+    "has_errors": true or false,
+    "corrected": "her whole last message, corrected (empty if no errors)",
+    "explanation_ru": "short explanation in Russian (empty if no errors)",
+    "praise_ru": "short warm praise in Russian (only if no errors)"
+  },
+  "errors": [ { "wrong": "wrong fragment", "right": "correct fragment", "rule_ru": "short rule name in Russian" } ],
+  "level": "A1" or "A2" or "B1" (estimate of HER level based on this message)
+}`;
+
+async function callClaude(system, msgs, maxTokens = 700) {
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': state.apiKey,
+      'anthropic-version': '2023-06-01',
+      // Разрешает запрос прямо из браузера
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({ model: state.model, max_tokens: maxTokens, system, messages: msgs })
+  });
+  if (!r.ok) {
+    let detail = '';
+    try { detail = (await r.json()).error.message; } catch (e) {}
+    throw new Error(r.status + (detail ? ' — ' + detail : ''));
+  }
+  const data = await r.json();
+  return (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+}
+
+// Готовим историю: роли должны чередоваться и начинаться с user
+function buildApiMessages() {
+  const out = [];
+  for (const m of state.history.slice(-20)) {
+    const last = out[out.length - 1];
+    if (last && last.role === m.role) last.content += '\n' + m.content;
+    else out.push({ role: m.role, content: m.content });
+  }
+  if (out.length && out[0].role === 'assistant') out.unshift({ role: 'user', content: 'Oi!' });
+  const last = out[out.length - 1];
+  if (last && last.role === 'user') {
+    last.content += '\n\n[Responda apenas com o JSON no formato combinado.]';
+  }
+  return out;
+}
+
+function parseJSON(text) {
+  const m = text.match(/\{[\s\S]*\}/);
+  if (!m) return null;
+  try { return JSON.parse(m[0]); } catch (e) { return null; }
+}
+
+async function askClaude() {
+  const raw = await callClaude(SYSTEM_PROMPT, buildApiMessages());
+  const j = parseJSON(raw);
+  if (!j || !j.reply) {
+    // Модель ответила не JSON — показываем текст как есть
+    return { reply: raw.trim(), reply_ru: null, user_ru: null, correction: null, errors: [], level: null };
+  }
+  return {
+    reply: String(j.reply),
+    reply_ru: j.reply_ru || null,
+    user_ru: j.user_ru || null,
+    correction: j.correction || null,
+    errors: Array.isArray(j.errors) ? j.errors : [],
+    level: j.level || null
+  };
+}
+
+/* =====================================================================
+   ДЕМО-РЕЖИМ (без API-ключа)
+   ===================================================================== */
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function demoReply(text) { await sleep(600 + Math.random() * 500); return demoReplySync(text); }
+
+function demoCorrect(text) {
+  const errors = [];
+  let corrected = text;
+  for (const [pat, right, rule] of DEMO_RULES) {
+    const re = new RegExp('(^|[^\\p{L}])(' + pat + ')(?=[^\\p{L}]|$)', 'giu');
+    corrected = corrected.replace(re, (m, pre, word) => {
+      errors.push({ wrong: word, right, rule_ru: rule });
+      const fixed = /^\p{Lu}/u.test(word) ? right[0].toUpperCase() + right.slice(1) : right;
+      return pre + fixed;
+    });
+  }
+  // «gosto pizza» → «gosto de pizza»
+  const reGosto = /(^|[^\p{L}])(gost[oa])\s+(?!(?:de|da|do|das|dos|muito|mais|tanto|bastante|disso|dele|dela)(?=[^\p{L}]|$))(?=\p{L})/giu;
+  corrected = corrected.replace(reGosto, (m, pre, w) => {
+    errors.push({ wrong: w + ' + существительное', right: w + ' de …', rule_ru: 'После gostar нужен предлог de: gosto de música.' });
+    return pre + w + ' de ';
+  });
+  return { corrected, errors };
+}
+
+function demoReplySync(text) {
+  const { corrected, errors } = demoCorrect(text);
+  let r = DEMO_KEYWORDS.find(k => k.re.test(text));
+  if (!r) { r = DEMO_GENERIC[demoGenericIdx % DEMO_GENERIC.length]; demoGenericIdx++; }
+  return {
+    reply: r.pt,
+    reply_ru: r.ru,
+    user_ru: null,
+    correction: errors.length
+      ? { has_errors: true, corrected, explanation_ru: [...new Set(errors.map(e => e.rule_ru))].join(' ') }
+      : { has_errors: false, praise_ru: PRAISES[Math.floor(Math.random() * PRAISES.length)] },
+    errors,
+    level: null
+  };
+}
+
+/* =====================================================================
+   РАСПОЗНАВАНИЕ РЕЧИ (Web Speech API, pt-BR)
+   ===================================================================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let rec = null, recActive = false, recText = '', pressStart = 0;
+
+function startRec() {
+  if (!SR) { toast('Распознавание речи не поддерживается. Откройте страницу в Chrome или Edge.'); return; }
+  if (state.busy || recActive) return;
+  clearIdle();
+  stopSpeaking();   // чтобы микрофон не услышал саму Bia
+  rec = new SR();
+  rec.lang = 'pt-BR';
+  rec.interimResults = true;
+  rec.continuous = true;
+  recText = '';
+
+  rec.onresult = e => {
+    let txt = '';
+    for (let i = 0; i < e.results.length; i++) txt += e.results[i][0].transcript;
+    recText = txt;
+    showLive(txt);
+  };
+  rec.onerror = e => {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+      toast('Нет доступа к микрофону — разрешите его в настройках браузера.');
+    } else if (e.error === 'network') {
+      toast('Распознаванию нужен интернет.');
+    } else if (e.error !== 'no-speech' && e.error !== 'aborted') {
+      toast('Ошибка распознавания: ' + e.error);
+    }
+  };
+  rec.onend = () => {
+    recActive = false;
+    $('micBtn').classList.remove('rec');
+    $('micHint').textContent = 'Удерживайте и говорите по-португальски (или нажмите один раз)';
+    $('live').textContent = '';
+    const text = recText.trim();
+    if (text) sendUser(text);
+    else onSilentRecording();
+  };
+
+  try { rec.start(); } catch (e) { toast('Не удалось включить микрофон'); return; }
+  recActive = true;
+  $('micBtn').classList.add('rec');
+  $('micHint').textContent = 'Слушаю… отпустите (или нажмите ещё раз), чтобы отправить';
+  showLive('');
+}
+function stopRec() { if (rec && recActive) rec.stop(); }
+
+// Черновик распознанной речи над кнопкой (в «Только голос» — без текста)
+function showLive(txt) {
+  $('live').textContent = state.mode === 'voice' ? '🎙 слушаю…' : (txt ? '«' + txt + '»' : '🎙 слушаю…');
+}
+
+// Кнопка микрофона: удержание = «нажми и говори», короткое нажатие = вкл/выкл
+const mic = $('micBtn');
+mic.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (recActive) { stopRec(); return; }
+  try { mic.setPointerCapture(e.pointerId); } catch (_) {}
+  pressStart = Date.now();
+  startRec();
+});
+mic.addEventListener('pointerup', () => {
+  if (recActive && Date.now() - pressStart > 400) stopRec();  // долгое удержание — отпустили
+});
+mic.addEventListener('contextmenu', e => e.preventDefault());
+
+// Пробел — тоже «нажми и говори» (если фокус не в поле ввода)
+document.addEventListener('keydown', e => {
+  if (e.code !== 'Space' || e.repeat || state.mode === 'text') return;
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  e.preventDefault();
+  pressStart = Date.now();
+  startRec();
+});
+document.addEventListener('keyup', e => {
+  if (e.code !== 'Space' || state.mode === 'text') return;
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  stopRec();
+});
+
+/* =====================================================================
+   ТЕКСТОВЫЙ ВВОД
+   ===================================================================== */
+$('textRow').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('textInput').value;
+  $('textInput').value = '';
+  sendUser(v);
+});
+$('textInput').addEventListener('input', clearIdle);
+
+/* =====================================================================
+   МОЛЧАНИЕ → Bia предлагает тему
+   ===================================================================== */
+let idleTimer = null, idleNudges = 0, nudgeIdx = Math.floor(Math.random() * IDLE_NUDGES.length);
+
+function clearIdle() { clearTimeout(idleTimer); idleTimer = null; }
+function scheduleIdle() {
+  clearIdle();
+  idleTimer = setTimeout(() => {
+    if (state.busy || recActive || document.visibilityState !== 'visible') return scheduleIdle();
+    if (idleNudges >= MAX_IDLE_NUDGES) return;
+    if ($('textInput').value.trim()) return scheduleIdle();
+    idleNudges++;
+    aiSay(IDLE_NUDGES[nudgeIdx++ % IDLE_NUDGES.length]);
+  }, IDLE_MS);
+}
+function onSilentRecording() { aiSay(SILENT_REC); }
+
+// Реплика Bia без запроса к API (темы, подсказки)
+function aiSay({ pt, ru }) {
+  addMessage('ai', pt, { ru });
+  speak(pt);
+  scheduleIdle();
+}
+
+/* =====================================================================
+   БЫСТРЫЕ ТЕМЫ
+   ===================================================================== */
+TOPICS.forEach(t => {
+  const b = el('button', 'chip', t.label);
+  b.onclick = () => { if (!state.busy) { stopSpeaking(); idleNudges = 0; aiSay(t); } };
+  $('topics').append(b);
+});
+
+/* =====================================================================
+   ПРОГРЕСС: streak, ошибки, уровень
+   ===================================================================== */
+function dayStr(d = new Date()) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+function yesterdayStr() { const d = new Date(); d.setDate(d.getDate() - 1); return dayStr(d); }
+
+// Текущая серия: если пропущен больше чем день — серия сгорела
+function currentStreak() {
+  return (progress.lastDay === dayStr() || progress.lastDay === yesterdayStr()) ? progress.streak : 0;
+}
+
+function markPractice() {
+  const today = dayStr();
+  if (progress.lastDay !== today) {
+    progress.streak = progress.lastDay === yesterdayStr() ? progress.streak + 1 : 1;
+    progress.lastDay = today;
+  }
+  progress.totalMsgs++;
+  saveProgress();
+  updateStatus();
+}
+
+function registerErrors(errors) {
+  if (!Array.isArray(errors)) return;
+  for (const e of errors) {
+    if (!e || !e.wrong || !e.right) continue;
+    const key = (e.wrong + '→' + e.right).toLowerCase();
+    const item = progress.errors[key] || { wrong: e.wrong, right: e.right, rule: e.rule_ru || '', count: 0 };
+    item.count++;
+    item.last = Date.now();
+    progress.errors[key] = item;
+  }
+  // Ограничиваем список, чтобы не разрастался
+  const keys = Object.keys(progress.errors);
+  if (keys.length > 60) {
+    keys.sort((a, b) => (progress.errors[a].count - progress.errors[b].count) || (progress.errors[a].last - progress.errors[b].last))
+      .slice(0, keys.length - 60).forEach(k => delete progress.errors[k]);
+  }
+  saveProgress();
+}
+
+const LEVEL_NUM = { A1: 1, A2: 2, B1: 3 };
+function registerLevel(level, text, errors) {
+  let score = LEVEL_NUM[String(level || '').toUpperCase()];
+  if (!score) {
+    // Грубая оценка без API: длина фразы и число ошибок
+    const words = text.split(/\s+/).filter(Boolean).length;
+    score = words >= 12 ? 3 : words >= 6 ? 2 : 1;
+    if ((errors || []).length >= 2) score = Math.max(1, score - 1);
+  }
+  progress.levelScores.push(score);
+  progress.levelScores = progress.levelScores.slice(-15);
+  saveProgress();
+  updateStatus();
+}
+
+function estimatedLevel() {
+  const s = progress.levelScores;
+  if (!s.length) return '—';
+  const avg = s.reduce((a, b) => a + b, 0) / s.length;
+  return avg < 1.67 ? 'A1' : avg < 2.34 ? 'A2' : 'B1';
+}
+
+function renderProgress() {
+  $('stStreak').textContent = currentStreak();
+  $('stLevel').textContent = estimatedLevel();
+  $('stTotal').textContent = progress.totalMsgs;
+  const list = $('errList');
+  list.innerHTML = '';
+  const items = Object.values(progress.errors).sort((a, b) => b.count - a.count).slice(0, 12);
+  if (!items.length) {
+    list.append(el('li', '', 'Пока ошибок не накопилось — болтайте больше! 🙂'));
+    return;
+  }
+  for (const it of items) {
+    const li = el('li');
+    const cnt = el('span', 'cnt', '×' + it.count + (it.count >= 2 ? ' 🔁' : ''));
+    const line = el('div');
+    line.append(el('s', '', it.wrong), document.createTextNode(' → '), el('b', '', it.right));
+    li.append(cnt, line);
+    if (it.rule) li.append(el('div', 'rule', it.rule));
+    list.append(li);
+  }
+}
+
+function updateStatus() {
+  const mode = state.apiKey ? 'Claude API' : 'демо-режим · ключ в ⚙️';
+  $('statusLine').textContent = '🔥 ' + currentStreak() + ' дн. · ≈' + estimatedLevel() + ' · ' + mode;
+}
+
+/* =====================================================================
+   ПАНЕЛИ (настройки, прогресс)
+   ===================================================================== */
+function openSheet(id) {
+  $('overlay').classList.add('show');
+  $(id).classList.add('show');
+}
+function closeSheets() {
+  $('overlay').classList.remove('show');
+  document.querySelectorAll('.sheet').forEach(s => s.classList.remove('show'));
+}
+$('overlay').onclick = closeSheets;
+document.querySelectorAll('[data-close]').forEach(b => b.onclick = closeSheets);
+
+$('settingsBtn').onclick = () => {
+  $('keyInput').value = state.apiKey;
+  $('modelInput').value = state.model;
+  $('rateInput').value = state.rate;
+  $('rateVal').textContent = state.rate;
+  pickVoice();
+  openSheet('settingsSheet');
+};
+$('rateInput').oninput = e => $('rateVal').textContent = e.target.value;
+$('saveSettings').onclick = () => {
+  state.apiKey = $('keyInput').value.trim();
+  state.model = $('modelInput').value.trim() || DEFAULT_MODEL;
+  state.rate = parseFloat($('rateInput').value) || 0.95;
+  LS.set('pt_key', state.apiKey);
+  LS.set('pt_model', state.model);
+  LS.set('pt_rate', state.rate);
+  updateStatus();
+  closeSheets();
+  toast(state.apiKey ? 'Сохранено. Bia теперь отвечает через Claude 🎉' : 'Сохранено. Работает демо-режим.');
+};
+$('testVoice').onclick = () => {
+  state.rate = parseFloat($('rateInput').value) || 0.95;
+  speak('Oi! Eu sou a Bia. Vamos conversar em português?', true);
+};
+$('clearChat').onclick = () => {
+  chat.innerHTML = '';
+  messages.length = 0;
+  state.history = [];
+  closeSheets();
+  greet();
+};
+
+$('progressBtn').onclick = () => { renderProgress(); openSheet('progressSheet'); };
+$('resetProgress').onclick = () => {
+  if (!confirm('Сбросить серию, ошибки и уровень?')) return;
+  Object.assign(progress, { streak: 0, lastDay: null, errors: {}, levelScores: [], totalMsgs: 0 });
+  saveProgress();
+  renderProgress();
+  updateStatus();
+};
+
+/* =====================================================================
+   УВЕДОМЛЕНИЯ
+   ===================================================================== */
+let toastTimer;
+function toast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+/* =====================================================================
+   СТАРТ
+   ===================================================================== */
+function greet() {
+  // Приветствие не озвучиваем: браузер не даст говорить до первого клика
+  addMessage('ai', 'Oi! Tudo bem? Eu sou a Bia 😊 Sobre o que vamos conversar hoje? Pode escolher um tema aqui em cima ou só me contar como foi o seu dia.', {
+    ru: 'Привет! Как дела? Я Биа. О чём поговорим сегодня? Можешь выбрать тему сверху или просто рассказать, как прошёл твой день.'
+  });
+  scheduleIdle();
+}
+
+applyTheme();
+setMode(state.mode);
+updateTtsBtn();
+updateStatus();
+greet();
+if (!SR) setTimeout(() => toast('Голосовой ввод работает в Chrome и Edge. Здесь доступен текстовый режим.'), 800);
+</script>
+</body>
+</html>
